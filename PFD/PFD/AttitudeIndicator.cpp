@@ -56,9 +56,16 @@ void AttitudeIndicator::draw(sf::RenderWindow& window, const FlightData& data)
 	// Rotate ground by degrees of roll
 	ground.setRotation(data.roll);
 
+	sf::RectangleShape horizon(sf::Vector2f{ diameter * 3.f, 3.f });
+	horizon.setFillColor(sf::Color::White);
+	horizon.setOrigin(diameter * 1.5f, 1.5f);
+	horizon.setPosition(center_x, center_y + pitchOffset);
+	horizon.setRotation(data.roll);
+
 	// Draw sky and ground onto the canvas and finalize the texture
 	m_renderTexture.draw(sky);
 	m_renderTexture.draw(ground);
+	m_renderTexture.draw(horizon);
 	m_renderTexture.display();
 
 	sf::CircleShape ai_screen(m_radius);
