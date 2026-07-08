@@ -6,8 +6,9 @@ class AttitudeIndicator
 {
 public:
 	AttitudeIndicator(const sf::Vector2f& center, float radius); 
-	void draw(sf::RenderWindow& window, const FlightData& data); // draws the horizon, sky, and ground according to pitch
-
+	void draw(sf::RenderWindow& window, const FlightData& plane); // draws the horizon, sky, and ground
+	void drawSkyGround(sf::RenderWindow& window, const FlightData& plane, float diameter, float pitchOffset);
+	void drawHorizon(sf::RenderWindow& window, const FlightData& plane, float diameter, float pitchOffset);
 private:
 	sf::Vector2f m_center;	           // center of attitude indicator
 	float m_radius;					   // radius of attitude indicator	
