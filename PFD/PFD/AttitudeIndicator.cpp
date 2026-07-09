@@ -22,23 +22,36 @@ void AttitudeIndicator::draw(sf::RenderWindow& window, const FlightData& plane)
 	// Shift the horizon based on pitch, 10 degrees x 3 = 30 pixels shift
 	float pitchOffset = plane.pitch * 3.f;
 
-	drawSkyGround(window, plane, diameter,pitchOffset);
-	drawHorizon(window, plane, diameter, pitchOffset);
-
+	// Call helper functions to draw
+	drawSkyGround(plane, diameter,pitchOffset);
+	drawHorizon(plane, diameter, pitchOffset);
+	drawPitchLadder(plane, diameter, pitchOffset);
+	
+	
 	m_renderTexture.display();
 
+	// Create circle for attitude indicator screen
 	sf::CircleShape ai_screen(m_radius);
+	
+	// Increase pixel count
 	ai_screen.setPointCount(128);
+
+	// Wrap render texture onto attitude indicator screen
 	ai_screen.setTexture(&m_renderTexture.getTexture());
+	
+	// Set origin to center of itself
 	ai_screen.setOrigin(m_radius, m_radius);
+
+	// Set position center of screen
 	ai_screen.setPosition(m_center);
 
+	// Draw it onto the window
 	window.draw(ai_screen);
 
 }
 
 
-void AttitudeIndicator::drawSkyGround(sf::RenderWindow& window, const FlightData& plane, float diameter, float pitchOffset)
+void AttitudeIndicator::drawSkyGround(const FlightData& plane, float diameter, float pitchOffset)
 {
 
 	// Create sky object larger than canvas to account for turning
@@ -77,9 +90,12 @@ void AttitudeIndicator::drawSkyGround(sf::RenderWindow& window, const FlightData
 
 }
 
-void AttitudeIndicator::drawHorizon(sf::RenderWindow& window, const FlightData& plane, float diameter, float pitchOffset)
+void AttitudeIndicator::drawHorizon(const FlightData& plane, float diameter, float pitchOffset)
 {
+	// Create horizon line
 	sf::RectangleShape horizon(sf::Vector2f{ diameter * 3.f, 3.f });
+
+	// Set color to white, origin to its center, and position to center of canvas
 	horizon.setFillColor(sf::Color::White);
 	horizon.setOrigin(diameter * 1.5f, 1.5f);
 	horizon.setPosition(m_radius, m_radius + pitchOffset);
@@ -87,4 +103,22 @@ void AttitudeIndicator::drawHorizon(sf::RenderWindow& window, const FlightData& 
 
 	// Draw horizon line to texture
 	m_renderTexture.draw(horizon);
+}
+
+void AttitudeIndicator::drawPitchLadder(const FlightData& plane, float diameter, float pitchOffset)
+{
+	for (int angle = -30; angle <= 30; angle += 5)
+	{
+		if (angle == 0) continue;
+
+		float tickWidth = (angle % 10 == 0) ? diameter * 0.3f : diameter * 0.15f;
+		float pixelsPerDegree = m_radius / 30.f;
+		sf::RectangleShape tick(sf::Vector2f{ tickWidth, 2.f });
+		tick.setFillColor(sf::Color::White);
+		tick.setOrigin(tickWidth * 0.5f, 1.f);
+		tick.setPosition(m_radius, (m_radius + pitchOffset) - (angle * pixelsPerDegree));
+		tick.setRotation(plane.roll);
+
+		m_renderTexture.draw(tick);
+	}
 }
