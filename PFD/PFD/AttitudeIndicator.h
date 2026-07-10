@@ -10,7 +10,7 @@ public:
 private:
 	void drawSkyGround(const FlightData& plane, float diameter, float pitchOffset);
 	void drawHorizon(const FlightData& plane, float diameter, float pitchOffset);
-	void drawPitchLadder(const FlightData& plane, float diameter, float pitchOffset);
+	void drawPitchLadder(const FlightData& plane, float diameter, float pitchOffset, float pixelsPerPitch);
 	
 	sf::Vector2f m_center;	           // center of attitude indicator
 	float m_radius;					   // radius of attitude indicator	

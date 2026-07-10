@@ -1,5 +1,11 @@
 #include "AttitudeIndicator.h"
 
+// Constants for attitude indicator
+constexpr float PITCH_RANGE = 30.f;
+constexpr float SCREEN_SCALE = 3.f;
+const sf::Color BLUE = { 0, 153, 204 };
+const sf::Color BROWN = { 153, 102, 51 };
+
 AttitudeIndicator::AttitudeIndicator(const sf::Vector2f& center, float radius)
 	:m_center(center), m_radius(radius)
 {
@@ -17,17 +23,20 @@ void AttitudeIndicator::draw(sf::RenderWindow& window, const FlightData& plane)
 	m_renderTexture.clear();
 
 	// Diameter of renderTexture
-	float diameter = static_cast<float>(m_renderTexture.getSize().x); 
+	float diameter = m_radius * 2.f; 
 
-	// Shift the horizon based on pitch, 10 degrees x 3 = 30 pixels shift
-	float pitchOffset = plane.pitch * 3.f;
+	// Pixels per degree of pitch
+	float pixelsPerPitch = m_radius / PITCH_RANGE;
+
+	// Calculate how much pixel movement based on plane's shift
+	float pitchOffset = plane.pitch * pixelsPerPitch;
 
 	// Call helper functions to draw
 	drawSkyGround(plane, diameter,pitchOffset);
 	drawHorizon(plane, diameter, pitchOffset);
-	drawPitchLadder(plane, diameter, pitchOffset);
+	drawPitchLadder(plane, diameter, pitchOffset, pixelsPerPitch);
 	
-	
+	// Set drawn sky, ground, pitch onto render texture
 	m_renderTexture.display();
 
 	// Create circle for attitude indicator screen
@@ -55,10 +64,10 @@ void AttitudeIndicator::drawSkyGround(const FlightData& plane, float diameter, f
 {
 
 	// Create sky object larger than canvas to account for turning
-	sf::RectangleShape sky(sf::Vector2f{ diameter * 3.f, diameter * 3.f });
+	sf::RectangleShape sky(sf::Vector2f{ diameter * SCREEN_SCALE, diameter * SCREEN_SCALE });
 
 	// Set sky color to blue
-	sky.setFillColor(sf::Color{ 0,153,204 });
+	sky.setFillColor(BLUE);
 
 	// Set sky's origin to the center of itself
 	sky.setOrigin(diameter * 1.5f, diameter * 1.5f);
@@ -70,10 +79,10 @@ void AttitudeIndicator::drawSkyGround(const FlightData& plane, float diameter, f
 	sky.setRotation(plane.roll);
 
 	// Create ground object larger than canvas to account for turning
-	sf::RectangleShape ground(sf::Vector2f{ diameter * 3.f,diameter * 3.f });
+	sf::RectangleShape ground(sf::Vector2f{ diameter * SCREEN_SCALE,diameter * SCREEN_SCALE });
 
 	// Set ground color to brown
-	ground.setFillColor(sf::Color{ 153,102,51 });
+	ground.setFillColor(BROWN);
 
 	// Set ground origin to it's center
 	ground.setOrigin(diameter * 1.5f, 0.f);
@@ -93,7 +102,7 @@ void AttitudeIndicator::drawSkyGround(const FlightData& plane, float diameter, f
 void AttitudeIndicator::drawHorizon(const FlightData& plane, float diameter, float pitchOffset)
 {
 	// Create horizon line
-	sf::RectangleShape horizon(sf::Vector2f{ diameter * 3.f, 3.f });
+	sf::RectangleShape horizon(sf::Vector2f{ diameter * SCREEN_SCALE, SCREEN_SCALE });
 
 	// Set color to white, origin to its center, and position to center of canvas
 	horizon.setFillColor(sf::Color::White);
@@ -105,20 +114,30 @@ void AttitudeIndicator::drawHorizon(const FlightData& plane, float diameter, flo
 	m_renderTexture.draw(horizon);
 }
 
-void AttitudeIndicator::drawPitchLadder(const FlightData& plane, float diameter, float pitchOffset)
+void AttitudeIndicator::drawPitchLadder(const FlightData& plane, float diameter, float pitchOffset, float pixelsPerPitch)
 {
+	// Create point of rotation to be around center of attitude indicator
+	sf::Transform rollTransform;
+	rollTransform.rotate(plane.roll,m_radius,m_radius);
+
+	// Create tick marks between -30 and 30
 	for (int angle = -30; angle <= 30; angle += 5)
 	{
+		// Skip middle tick mark
 		if (angle == 0) continue;
 
+		// Make increment of ten tick marks wider
 		float tickWidth = (angle % 10 == 0) ? diameter * 0.3f : diameter * 0.15f;
-		float pixelsPerDegree = m_radius / 30.f;
+
+		// Create tick mark, set color, and set it's origin to it's center
 		sf::RectangleShape tick(sf::Vector2f{ tickWidth, 2.f });
 		tick.setFillColor(sf::Color::White);
 		tick.setOrigin(tickWidth * 0.5f, 1.f);
-		tick.setPosition(m_radius, (m_radius + pitchOffset) - (angle * pixelsPerDegree));
-		tick.setRotation(plane.roll);
 
-		m_renderTexture.draw(tick);
+		// Set position of tick based on where the horizon is and pixels per angle
+		tick.setPosition(m_radius, (m_radius + pitchOffset) - (angle * pixelsPerPitch));
+
+		// Draw tick to be rotated around center
+		m_renderTexture.draw(tick,rollTransform);
 	}
 }
