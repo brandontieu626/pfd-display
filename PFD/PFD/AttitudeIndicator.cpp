@@ -1,4 +1,6 @@
 #include "AttitudeIndicator.h"
+#include <iostream>
+#include <string>
 
 // Constants for attitude indicator
 constexpr float PITCH_RANGE = 30.f;
@@ -9,12 +11,18 @@ const sf::Color BROWN = { 153, 102, 51 };
 AttitudeIndicator::AttitudeIndicator(const sf::Vector2f& center, float radius)
 	:m_center(center), m_radius(radius)
 {
-	//Create an offscreen texture for holding the sky and ground
+	// Create an offscreen texture for holding the sky and ground
 	m_renderTexture.create
 	(
 		static_cast<unsigned int>(std::round(radius * 2)),
 		static_cast<unsigned int>(std::round(radius * 2))
 	);
+
+	// Initialize font as arial
+	if (!m_font.loadFromFile("../../assets/fonts/arial.ttf"))
+	{
+		std::cout << "Failed to load font";
+	}
 }
 
 void AttitudeIndicator::draw(sf::RenderWindow& window, const FlightData& plane)
@@ -56,6 +64,8 @@ void AttitudeIndicator::draw(sf::RenderWindow& window, const FlightData& plane)
 
 	// Draw it onto the window
 	window.draw(ai_screen);
+	
+	drawAircraftSymbol(window);
 
 }
 
@@ -134,10 +144,88 @@ void AttitudeIndicator::drawPitchLadder(const FlightData& plane, float diameter,
 		tick.setFillColor(sf::Color::White);
 		tick.setOrigin(tickWidth * 0.5f, 1.f);
 
-		// Set position of tick based on where the horizon is and pixels per angle
-		tick.setPosition(m_radius, (m_radius + pitchOffset) - (angle * pixelsPerPitch));
+		// Calculate position of tick based on where horizon is and pixels per angle
+		float tickY = (m_radius + pitchOffset) - (angle * pixelsPerPitch);
+		tick.setPosition(m_radius, tickY);
+
+		// Only label tick at increments of 10 degrees
+		if (angle % 10 == 0) 
+		{
+			// Create text object to display the number
+			sf::Text label;
+			label.setFont(m_font);
+			label.setCharacterSize(18);
+			label.setFillColor(sf::Color::White);
+			label.setString(std::to_string(std::abs(angle)));
+
+			// Struct to hold all values of text box size which is a rectangle
+			sf::FloatRect bounds = label.getLocalBounds();
+
+			// To find origin, account for padding from left of the text and top of the text
+			label.setOrigin(bounds.left + bounds.width / 2.f, bounds.top + bounds.height / 2.f);
+
+			// Offset for x positioning based on starting at the center of the tick
+			float labelOffset = (tickWidth * 0.5f) + (bounds.width / 2.f) + 5.f;
+
+			// Draw left label
+			label.setPosition(m_radius - labelOffset, tickY);
+			m_renderTexture.draw(label, rollTransform);
+
+			// Draw right label
+			label.setPosition(m_radius + labelOffset, tickY);
+			m_renderTexture.draw(label, rollTransform);
+		}
 
 		// Draw tick to be rotated around center
 		m_renderTexture.draw(tick,rollTransform);
 	}
+}
+
+void AttitudeIndicator::drawAircraftSymbol(sf::RenderWindow& window)
+{
+	// Define wing size variables based on radius
+	float wingWidth = m_radius * 0.4f;
+	float wingHeight = m_radius * 0.03f;
+	float offset = m_radius * 0.25f;
+	float verticalOffset = m_radius * 0.05f;
+	float tabHeight = m_radius * 0.10f;
+
+	// Create left wing, position according to x offset and slightly above center of ai
+	sf::RectangleShape leftWing(sf::Vector2f{ wingWidth, wingHeight });
+	leftWing.setFillColor(sf::Color::Yellow);
+	leftWing.setOrigin(wingWidth, wingHeight / 2.f);
+	leftWing.setPosition(m_center.x - offset, m_center.y - verticalOffset);
+
+	// Create right wing, position according to x offset and slightly above center of ai
+	sf::RectangleShape rightWing(sf::Vector2f{ wingWidth, wingHeight });
+	rightWing.setFillColor(sf::Color::Yellow);
+	rightWing.setOrigin(0.f, wingHeight / 2.f);
+	rightWing.setPosition(m_center.x + offset, m_center.y - verticalOffset);
+
+	// Create hollow circle for center circle
+	sf::CircleShape dot(5.f);
+	dot.setFillColor(sf::Color::Transparent);
+	dot.setOutlineColor(sf::Color::Yellow);
+	dot.setOutlineThickness(2.f);
+	dot.setOrigin(5.f, 5.f);
+	dot.setPosition(sf::Vector2f{m_center.x,m_center.y - verticalOffset });
+
+	// Left wing tab
+	sf::RectangleShape leftTab(sf::Vector2f{ wingHeight, tabHeight });
+	leftTab.setFillColor(sf::Color::Yellow);
+	leftTab.setOrigin(wingHeight, 0.f);
+	leftTab.setPosition(m_center.x - offset, m_center.y - verticalOffset);
+
+	// Right wing tab 
+	sf::RectangleShape rightTab(sf::Vector2f{ wingHeight, tabHeight });
+	rightTab.setFillColor(sf::Color::Yellow);
+	rightTab.setOrigin(0.f, 0.f);
+	rightTab.setPosition(m_center.x + offset, m_center.y - verticalOffset);
+
+	// Draw the wings with its tabs directly onto the window
+	window.draw(leftWing);
+	window.draw(rightWing);
+	window.draw(leftTab);
+	window.draw(rightTab);
+	window.draw(dot);
 }
