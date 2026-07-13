@@ -2,7 +2,7 @@
 #include "AttitudeIndicator.h"
 #include "FlightData.h"
 #include "Constants.h"
-
+#include <iostream>
 int main() 
 {
 	//Create window
@@ -11,7 +11,7 @@ int main()
 	//sf::RenderWindow window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), WINDOW_TITLE);
 
 	//Test plane struct and attitude indicator struct
-	FlightData plane{ 0.f, 0.f, 0.f, 0.f, 0.f, 0.f };
+	FlightData plane{ 0.f, 5.f, 0.f, 0.f, 0.f, 0.f };
 	//AttitudeIndicator ai{ sf::Vector2f{WINDOW_WIDTH /2.f,WINDOW_HEIGHT / 2.f },
 	//	std::min(WINDOW_WIDTH, WINDOW_HEIGHT) * 0.35f};
 	AttitudeIndicator ai{ sf::Vector2f{desktop.width / 2.f,desktop.height / 2.f },
@@ -21,10 +21,14 @@ int main()
 	{
 		sf::Event event;
 		
+		// Event handler loop for the window
 		while (window.pollEvent(event))
 		{
 			if (event.type == sf::Event::Closed)
 				window.close();
+			if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape)
+				window.close();
+			
 		}
 
 		window.clear(sf::Color::Black);
