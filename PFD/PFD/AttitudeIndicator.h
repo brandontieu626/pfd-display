@@ -13,6 +13,7 @@ private:
 	void drawPitchLadder(const FlightData& plane, float pitchOffset, float pixelsPerPitch);
 	void drawAircraftSymbol(sf::RenderWindow& window);
 	void drawRollIndicator(const FlightData& plane);
+	void drawRollPointer(sf::RenderWindow& window);
 
 	sf::Vector2f m_center;	           // center of attitude indicator
 	float m_radius;					   // radius of attitude indicator	

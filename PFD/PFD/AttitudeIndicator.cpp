@@ -67,6 +67,7 @@ void AttitudeIndicator::draw(sf::RenderWindow& window, const FlightData& plane)
 	window.draw(ai_screen);
 	
 	drawAircraftSymbol(window);
+	drawRollPointer(window);
 
 }
 
@@ -270,4 +271,25 @@ void AttitudeIndicator::drawRollIndicator(const FlightData& plane)
 		// Draw tick with rotation onto render texture
 		m_renderTexture.draw(tick, rollTransform);
 	}
+}
+
+void AttitudeIndicator::drawRollPointer(sf::RenderWindow& window)
+{
+	// Create triangle 
+	sf::ConvexShape triangle;
+	triangle.setPointCount(3);
+
+	// Do half width as we use 2 points for the base of the triangle
+	float halfWidth = m_radius * 0.04f;
+	float height = m_radius * 0.05f;
+
+	triangle.setPoint(0, sf::Vector2f{ -halfWidth, -height }); // Top left
+	triangle.setPoint(1, sf::Vector2f{ halfWidth, -height });  // Top right
+	triangle.setPoint(2, sf::Vector2f{ 0.f,        0.f });     // Tip of triangle
+	triangle.setFillColor(sf::Color::White);                     
+	triangle.setPosition(m_center.x, m_center.y - m_radius);   // Place right above the center outside ai
+
+	// Draw directly on window as it won't rotate
+	window.draw(triangle);
+
 }
