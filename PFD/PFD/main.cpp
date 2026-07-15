@@ -11,7 +11,7 @@ int main()
 	//sf::RenderWindow window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), WINDOW_TITLE);
 
 	//Test plane struct and attitude indicator struct
-	FlightData plane{ 0.f, 5.f, 0.f, 0.f, 0.f, 0.f };
+	FlightData plane{ 0.f, 10.f, 0.f, 0.f, 0.f, 0.f };
 	//AttitudeIndicator ai{ sf::Vector2f{WINDOW_WIDTH /2.f,WINDOW_HEIGHT / 2.f },
 	//	std::min(WINDOW_WIDTH, WINDOW_HEIGHT) * 0.35f};
 	AttitudeIndicator ai{ sf::Vector2f{desktop.width / 2.f,desktop.height / 2.f },

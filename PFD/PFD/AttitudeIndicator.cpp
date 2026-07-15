@@ -11,11 +11,14 @@ const sf::Color BROWN = { 153, 102, 51 };
 AttitudeIndicator::AttitudeIndicator(const sf::Vector2f& center, float radius)
 	:m_center(center), m_radius(radius), m_diameter(radius * 2.f)
 {
-	// Create an offscreen texture for holding the sky and ground
+	// Create an offscreen texture with anti-aliasing so lines are draw into it smooth
+	sf::ContextSettings settings;
+	settings.antialiasingLevel = 8;
 	m_renderTexture.create
 	(
 		static_cast<unsigned int>(std::round(radius * 2)),
-		static_cast<unsigned int>(std::round(radius * 2))
+		static_cast<unsigned int>(std::round(radius * 2)),
+		settings
 	);
 
 	// Initialize font as arial
@@ -255,7 +258,7 @@ void AttitudeIndicator::drawRollIndicator(const FlightData& plane)
 		float tickHeight = (angle >= 30 || angle <= -30) ? m_radius * 0.05f : m_radius * 0.03f;
 		float tickWidth = m_radius * 0.004f;
 
-		// Create the tick mark
+		// Create tick mark, set origin to it's top center 
 		sf::RectangleShape tick(sf::Vector2f{ tickWidth, tickHeight });
 		tick.setFillColor(sf::Color::White);
 		tick.setOrigin(tickWidth / 2.f, 0.f);
