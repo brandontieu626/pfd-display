@@ -140,10 +140,12 @@ sfml-system.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AltitudeTape.cpp" />
     <ClCompile Include="AttitudeIndicator.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AltitudeTape.h" />
     <ClInclude Include="AttitudeIndicator.h" />
     <ClInclude Include="Constants.h" />
     <ClInclude Include="FlightData.h" />

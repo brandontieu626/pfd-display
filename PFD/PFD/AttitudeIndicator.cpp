@@ -12,6 +12,7 @@ AttitudeIndicator::AttitudeIndicator(const sf::Vector2f& center, float radius)
 	:m_center(center), m_radius(radius), m_diameter(radius * 2.f)
 {
 	// Create an offscreen texture with anti-aliasing so lines are draw into it smooth
+	// Offscreen texture for the attitude indicator screen
 	sf::ContextSettings settings;
 	settings.antialiasingLevel = 8;
 	m_renderTexture.create
@@ -147,7 +148,7 @@ void AttitudeIndicator::drawPitchLadder(const FlightData& plane, float pitchOffs
 		// Create tick mark, set color, and set it's origin to it's center
 		sf::RectangleShape tick(sf::Vector2f{ tickWidth, tickHeight });
 		tick.setFillColor(sf::Color::White);
-		tick.setOrigin(tickWidth * 0.5f, m_radius * 0.002f);
+		tick.setOrigin(tickWidth / 2.f , tickHeight / 2.f);
 
 		// Calculate position of tick based on where horizon is and pixels per angle
 		float tickY = (m_radius + pitchOffset) - (angle * pixelsPerPitch);
@@ -158,8 +159,9 @@ void AttitudeIndicator::drawPitchLadder(const FlightData& plane, float pitchOffs
 		{
 			// Create text object to display the number
 			sf::Text label;
+			float charSize = static_cast<unsigned int>(m_radius * 0.036f);
 			label.setFont(m_font);
-			label.setCharacterSize(static_cast<unsigned int>(m_radius * 0.036f));
+			label.setCharacterSize(charSize);
 			label.setFillColor(sf::Color::White);
 			label.setString(std::to_string(std::abs(angle)));
 
