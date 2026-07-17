@@ -2,7 +2,7 @@
 #include <iostream>
 #include <cmath>
 
-constexpr float ALTITUDE_RANGE = 1000.f;
+constexpr float ALTITUDE_RANGE = 2000.f;
 constexpr float TICK_INTERVAL = 100.f;
 
 AltitudeTape::AltitudeTape(const sf::Vector2f& center, float width, float height)
@@ -31,18 +31,26 @@ void AltitudeTape::draw(sf::RenderWindow& window, const FlightData& plane)
 
     float pixelsPerFoot = m_height / ALTITUDE_RANGE;
 
-    drawTape(plane, pixelsPerFoot);
+    drawTicks(plane, pixelsPerFoot); // fill render texture
+    drawTape(window);                // draw it onto the window
+    drawReadout(window, plane);      // fix overlay on top
 
-    m_renderTexture.display();
+}
+
+void AltitudeTape::drawTape(sf::RenderWindow& window)
+{
+    // Create tape rectangle and set our render texture on top of it
     sf::RectangleShape tape(sf::Vector2f{ m_width, m_height });
     tape.setTexture(&m_renderTexture.getTexture());
     tape.setOrigin(m_width / 2.f, m_height / 2.f);
+    tape.setOutlineColor(sf::Color::White);
+    tape.setOutlineThickness(m_width * 0.02f);
     tape.setPosition(m_center);
     window.draw(tape);
 
 }
 
-void AltitudeTape::drawTape(const FlightData& plane, float pixelsPerFoot)
+void AltitudeTape::drawTicks(const FlightData& plane, float pixelsPerFoot)
 {
     // Move half way from plane altitude and round down to nearest 100 to find starting altitude
     int startAltitude = (static_cast<int>(plane.altitude - ALTITUDE_RANGE / 2) / 100) * 100;
@@ -77,7 +85,7 @@ void AltitudeTape::drawTape(const FlightData& plane, float pixelsPerFoot)
         {
             // Create text label containing altitude
             sf::Text label;
-            unsigned int charSize = static_cast<unsigned int>(m_width * 0.3f);
+            unsigned int charSize = static_cast<unsigned int>(m_width * 0.20f);
             label.setFont(m_font);
             label.setCharacterSize(charSize);
             label.setFillColor(sf::Color::White);
@@ -85,12 +93,44 @@ void AltitudeTape::drawTape(const FlightData& plane, float pixelsPerFoot)
 
             // Create bounds object to get measurements of textbox
             sf::FloatRect bounds = label.getLocalBounds();
-            // x position offset for font
             float labelOffset = m_width * 0.05f;
             label.setOrigin(0.f, bounds.top + (bounds.height / 2.f));
-            label.setPosition(tickWidth + (m_width * 0.05f), tickY);
+            label.setPosition(tickWidth + labelOffset, tickY);
             m_renderTexture.draw(label);
         }
     }
+
+    m_renderTexture.display();
+
+}
+
+void AltitudeTape::drawReadout(sf::RenderWindow& window, const FlightData& plane)
+{
+    // Set width of readout to same size as the tape
+    float boxWidth = m_width;
+    float boxHeight = m_height * 0.08f;
+
+    // Read out box centered in the middle on top of the altitude tape
+    sf::RectangleShape readOut(sf::Vector2f{ boxWidth,boxHeight });
+    readOut.setFillColor(sf::Color::Black);
+    readOut.setOutlineColor(sf::Color::Yellow);
+    readOut.setOutlineThickness(m_width * 0.02f);
+    readOut.setOrigin(boxWidth / 2.f, boxHeight / 2.f);
+    readOut.setPosition(m_center);
+    window.draw(readOut);
+
+    // Textbox containing the plane's current altitude
+    sf::Text label;
+    label.setFont(m_font);
+    unsigned int charSize = static_cast<unsigned int>(m_height * 0.04f);
+    label.setCharacterSize(charSize);
+    label.setFillColor(sf::Color::Green);
+    label.setString(std::to_string(static_cast<int>(plane.altitude)));
+
+    // Use floatrect to find center of the textbox
+    sf::FloatRect bounds = label.getLocalBounds();
+    label.setOrigin(bounds.left + bounds.width / 2.f, bounds.top + bounds.height / 2.f);
+    label.setPosition(m_center);
+    window.draw(label);
 
 }
