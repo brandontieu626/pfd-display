@@ -9,7 +9,7 @@ AltitudeTape::AltitudeTape(const sf::Vector2f& center, float width, float height
     : m_center(center), m_width(width), m_height(height)
 {
     // Create an offscreen texture with anti-aliasing so lines are draw into it smooth
-    // Offscreen texture for the altitude bar
+    // Offscreen texture for the altitude tape
     sf::ContextSettings settings;
     settings.antialiasingLevel = 8;
     m_renderTexture.create(
@@ -27,13 +27,16 @@ AltitudeTape::AltitudeTape(const sf::Vector2f& center, float width, float height
 
 void AltitudeTape::draw(sf::RenderWindow& window, const FlightData& plane)
 {
+    // Clear previous texture before drawing
     m_renderTexture.clear(sf::Color::Black);
 
+    // Determines total pixels drawn per foot
     float pixelsPerFoot = m_height / ALTITUDE_RANGE;
 
     drawTicks(plane, pixelsPerFoot); // fill render texture
     drawTape(window);                // draw it onto the window
     drawReadout(window, plane);      // fix overlay on top
+    drawFt(window);                  // draw measurement onto window
 
 }
 
@@ -58,7 +61,7 @@ void AltitudeTape::drawTicks(const FlightData& plane, float pixelsPerFoot)
     
     for (int altitude = startAltitude; altitude <= plane.altitude + (ALTITUDE_RANGE / 2); altitude += TICK_INTERVAL)
     {
-        // Find distance between plane's altitude current altitude by pixels
+        // Find distance between plane's altitude to current altitude by pixels
         float offset = (altitude - plane.altitude) * pixelsPerFoot;
 
         // Calculate where the tick is from center based on the offset
@@ -70,6 +73,7 @@ void AltitudeTape::drawTicks(const FlightData& plane, float pixelsPerFoot)
         // Draw a longer tick every 500 ft
         bool isMajor = (altitude % 500 == 0);
         float tickWidth = isMajor ? m_width * 0.4f : m_width * 0.2f;
+
         // Scale tick height based on height of altitude tape
         float tickHeight = m_height * 0.004f;
 
@@ -91,7 +95,7 @@ void AltitudeTape::drawTicks(const FlightData& plane, float pixelsPerFoot)
             label.setFillColor(sf::Color::White);
             label.setString(std::to_string(altitude));
 
-            // Create bounds object to get measurements of textbox
+            // Create bounds object to get actual measurements of textbox including padding
             sf::FloatRect bounds = label.getLocalBounds();
             float labelOffset = m_width * 0.05f;
             label.setOrigin(0.f, bounds.top + (bounds.height / 2.f));
@@ -101,7 +105,6 @@ void AltitudeTape::drawTicks(const FlightData& plane, float pixelsPerFoot)
     }
 
     m_renderTexture.display();
-
 }
 
 void AltitudeTape::drawReadout(sf::RenderWindow& window, const FlightData& plane)
@@ -127,10 +130,25 @@ void AltitudeTape::drawReadout(sf::RenderWindow& window, const FlightData& plane
     label.setFillColor(sf::Color::Green);
     label.setString(std::to_string(static_cast<int>(plane.altitude)));
 
-    // Use floatrect to find center of the textbox
+    // Find center of the textbox including padding
     sf::FloatRect bounds = label.getLocalBounds();
     label.setOrigin(bounds.left + bounds.width / 2.f, bounds.top + bounds.height / 2.f);
     label.setPosition(m_center);
     window.draw(label);
+}
 
+void AltitudeTape::drawFt(sf::RenderWindow& window)
+{
+    // Create text label to show feet
+    sf::Text unitsLabel;
+    unitsLabel.setFont(m_font);
+    unitsLabel.setCharacterSize(static_cast<unsigned int>(m_width * 0.2f));
+    unitsLabel.setFillColor(sf::Color::White);
+    unitsLabel.setString("FT");
+
+    // Find center of text and position it slightly above altitude tape
+    sf::FloatRect bounds = unitsLabel.getLocalBounds();
+    unitsLabel.setOrigin(bounds.left + bounds.width / 2.f, bounds.top + bounds.height / 2.f);
+    unitsLabel.setPosition(m_center.x,( m_center.y - m_height / 2.f) - (m_height * 0.03f));
+    window.draw(unitsLabel);
 }

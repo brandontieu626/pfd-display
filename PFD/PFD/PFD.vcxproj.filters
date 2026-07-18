@@ -24,6 +24,9 @@
     <ClCompile Include="AltitudeTape.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="AirspeedTape.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FlightData.h">
@@ -36,6 +39,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="AltitudeTape.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AirspeedTape.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

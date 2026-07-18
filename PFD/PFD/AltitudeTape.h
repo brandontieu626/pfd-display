@@ -10,6 +10,7 @@ private:
 	void drawTape(sf::RenderWindow& window);
 	void drawTicks(const FlightData& plane, float pixelsPerFoot);
 	void drawReadout(sf::RenderWindow& window, const FlightData& plane);
+	void drawFt(sf::RenderWindow& window);
 
 	sf::Vector2f m_center; // Center of the altitude tape
 	float m_width;         // Width of altitude tape
