@@ -68,6 +68,7 @@ void AttitudeIndicator::draw(sf::RenderWindow& window, const FlightData& plane)
 	window.draw(ai_screen);
 	
 	drawAircraftSymbol(window);
+	drawRollArc(window);
 	drawRollPointer(window);
 
 }
@@ -272,6 +273,36 @@ void AttitudeIndicator::drawRollIndicator(const FlightData& plane)
 
 		// Draw tick with rotation onto render texture
 		m_renderTexture.draw(tick, rollTransform);
+	}
+}
+
+void AttitudeIndicator::drawRollArc(sf::RenderWindow& window)
+{
+	// Scale thickness based on radius 
+	float thickness = m_radius * 0.008f;
+
+	// Draw multiple arcs centered on radius for a thicker line
+	for (float r = m_radius - (thickness / 2.f); r <= m_radius + (thickness / 2.f); r += 0.5f)
+	{
+		// 60 points, 1 per degree
+		sf::VertexArray arc(sf::LineStrip, 61);
+		
+		// 1 point for each 2 degrees between -60 and 60
+		for (int i = 0; i <= 60; i++)
+		{
+			// Moves at 2 degrees per point to cover -60 -> 60
+			float angle = -60.f + (i * 2.f);
+			// Subtract 90 to shift 0 degrees from 3 o'clock to 12 o'clock position
+			float radians = (angle - 90.f) * (3.14159f / 180.f);
+			// Calculate screen position by offsetting from center by the angle's x and y components
+			arc[i].position = sf::Vector2f{
+				m_center.x + r * std::cos(radians),
+				m_center.y + r * std::sin(radians)
+			};
+			arc[i].color = sf::Color::White;
+		}
+
+		window.draw(arc);
 	}
 }
 
