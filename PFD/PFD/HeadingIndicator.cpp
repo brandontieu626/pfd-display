@@ -15,7 +15,7 @@ void HeadingIndicator::draw(sf::RenderWindow& window, const FlightData& plane)
 {
     drawArc(window);
     drawTicks(window, plane);
-    //drawCenterMarker(window);
+    drawCenterMarker(window);
 }
 
 void HeadingIndicator::drawArc(sf::RenderWindow& window)
@@ -83,10 +83,13 @@ void HeadingIndicator::drawTicks(sf::RenderWindow& window, const FlightData& pla
         {
             int h = static_cast<int>(heading);
             std::string labelStr;
+            sf::Color directionColor = sf::Color::White;
             switch (h)
             {
             case 0:
-            case 360:   labelStr = "N"; break;
+            case 360:   labelStr = "N"; 
+                directionColor = sf::Color::Red;
+                break;
             case 90:    labelStr = "E"; break;
             case 180:   labelStr = "S"; break;
             case 270:   labelStr = "W"; break;
@@ -97,7 +100,7 @@ void HeadingIndicator::drawTicks(sf::RenderWindow& window, const FlightData& pla
             sf::Text label;
             label.setFont(m_font);
             label.setCharacterSize(static_cast<unsigned int>(m_radius * 0.08f));
-            label.setFillColor(sf::Color::White);
+            label.setFillColor(directionColor);
             label.setString(labelStr);
 
             // Find center of text box
@@ -113,4 +116,21 @@ void HeadingIndicator::drawTicks(sf::RenderWindow& window, const FlightData& pla
             window.draw(label);
         }
     }
+}
+void HeadingIndicator::drawCenterMarker(sf::RenderWindow& window)
+{
+    sf::ConvexShape triangle;
+    triangle.setPointCount(3);
+
+    float halfWidth = m_radius * 0.04f;
+    float height    = m_radius * 0.05f;
+
+    triangle.setPoint(0, sf::Vector2f{ -halfWidth, height }); // bottom-left (base)
+    triangle.setPoint(1, sf::Vector2f{  halfWidth, height }); // bottom-right (base)
+    triangle.setPoint(2, sf::Vector2f{  0.f,       0.f   }); // tip pointing up toward labels
+    triangle.setFillColor(sf::Color::Blue);
+    // Position inside the arc, below the heading labels (labels sit ~0.84 * radius from center)
+    triangle.setPosition(m_center.x, m_center.y - m_radius * 0.76f);
+
+    window.draw(triangle);
 }

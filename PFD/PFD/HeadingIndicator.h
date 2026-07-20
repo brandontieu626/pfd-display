@@ -9,7 +9,7 @@ public:
 private:
 	void drawArc(sf::RenderWindow& window);
 	void drawTicks(sf::RenderWindow& window, const FlightData& plane);
-	//void drawCenterMarker(sf::RenderWindow& window);
+	void drawCenterMarker(sf::RenderWindow& window);
 
 	sf::Vector2f m_center;
 	float m_radius;

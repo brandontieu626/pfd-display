@@ -7,4 +7,5 @@ struct FlightData
 	float airspeed; // knots
 	float altitude; // feet
 	float vspeed;   // feet per minute
+	float track;    // degrees 0-360, actual direction of movement over ground
 };
