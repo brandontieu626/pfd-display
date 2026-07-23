@@ -1,4 +1,5 @@
 #include "AttitudeIndicator.h"
+#include "Constants.h"
 #include <iostream>
 #include <string>
 
@@ -70,6 +71,7 @@ void AttitudeIndicator::draw(sf::RenderWindow& window, const FlightData& plane)
 	drawAircraftSymbol(window);
 	drawRollArc(window);
 	drawRollPointer(window);
+	drawFlightPathMarker(window, plane);
 
 }
 
@@ -213,7 +215,7 @@ void AttitudeIndicator::drawAircraftSymbol(sf::RenderWindow& window)
 	// Create hollow circle for center circle
 	float dotRadius = m_radius * 0.01f;
 	sf::CircleShape dot(dotRadius);
-	dot.setFillColor(sf::Color::Transparent);
+	dot.setFillColor(sf::Color::Yellow);
 	dot.setOutlineColor(sf::Color::Yellow);
 	dot.setOutlineThickness(m_radius * 0.004f);
 	dot.setOrigin(dotRadius, dotRadius);
@@ -252,7 +254,7 @@ void AttitudeIndicator::drawRollIndicator(const FlightData& plane)
 	for (int angle : tickAngles)
 	{
 		// Convert angle to radians
-		float radians = (angle - 90) * (3.14159f / 180.f);
+		float radians = (angle - 90) * (PI / 180.f);
 
 		// Calculate the distance from the center to the edge, then add the center position to it to get x,y coordinates
 		float x = m_radius + (m_radius * std::cos(radians));
@@ -293,7 +295,7 @@ void AttitudeIndicator::drawRollArc(sf::RenderWindow& window)
 			// Moves at 2 degrees per point to cover -60 -> 60
 			float angle = -60.f + (i * 2.f);
 			// Subtract 90 to shift 0 degrees from 3 o'clock to 12 o'clock position
-			float radians = (angle - 90.f) * (3.14159f / 180.f);
+			float radians = (angle - 90.f) * (PI / 180.f);
 			// Calculate screen position by offsetting from center by the angle's x and y components
 			arc[i].position = sf::Vector2f{
 				m_center.x + r * std::cos(radians),
@@ -308,7 +310,7 @@ void AttitudeIndicator::drawRollArc(sf::RenderWindow& window)
 
 void AttitudeIndicator::drawRollPointer(sf::RenderWindow& window)
 {
-	// Create triangle 
+	// Create triangle
 	sf::ConvexShape triangle;
 	triangle.setPointCount(3);
 
@@ -319,10 +321,80 @@ void AttitudeIndicator::drawRollPointer(sf::RenderWindow& window)
 	triangle.setPoint(0, sf::Vector2f{ -halfWidth, -height }); // Top left
 	triangle.setPoint(1, sf::Vector2f{ halfWidth, -height });  // Top right
 	triangle.setPoint(2, sf::Vector2f{ 0.f,        0.f });     // Tip of triangle
-	triangle.setFillColor(sf::Color::White);                     
+	triangle.setFillColor(sf::Color::White);
 	triangle.setPosition(m_center.x, m_center.y - m_radius);   // Place right above the center outside ai
 
 	// Draw directly on window as it won't rotate
 	window.draw(triangle);
+}
 
+void AttitudeIndicator::drawFlightPathMarker(sf::RenderWindow& window, const FlightData& plane)
+{
+	// Divides by airspeed, return to avoid dividing by 0 (0 airspeed means not flying)
+	if (plane.airspeed < 1.f) return;
+
+	// Convert vspeed (ft/min) and airspeed (knots) to the same unit (ft/sec) to get flight path angle
+	// vertical speed/total speed
+	// clamp to keep in valid asin range
+	float gamma = std::asin(
+		std::clamp((plane.vspeed / 60.f) / (plane.airspeed * 1.68781f), -1.f, 1.f)
+	);
+
+	// Convert radians to degrees
+	float gammaDeg = gamma * (180.f / PI);
+
+	float pixelsPerPitch = m_radius / PITCH_RANGE;
+
+	// Positive gamma = climbing = symbol moves up (negative y in SFML)
+	// clamp to stay inside the attitude indicator circle (border is 85%)
+	// calculate vertical offset position
+	float yOffset = std::clamp(-gammaDeg * pixelsPerPitch, -m_radius * 0.85f, m_radius * 0.85f);
+
+	// Drift angle: how far ground track deviates from heading (wind effect).
+	// track > heading, FPM shifts right due to wind drift
+	// track < heading, FPM shifts left due to wind drift
+	// use same pixelsPerPitch scale
+	// Wrapped to +-180 so crossing 0/360 boundary reads correctly (e.g. heading 350, track 10 = +20 right, not -340).
+	float trackError = plane.track - plane.heading;
+	if (trackError >  180.f) trackError -= 360.f;
+	if (trackError < -180.f) trackError += 360.f;
+	float xOffset = std::clamp(trackError * pixelsPerPitch, -m_radius * 0.85f, m_radius * 0.85f);
+
+	float fpmX = m_center.x + xOffset;
+	float fpmY = m_center.y + yOffset;
+
+	float circleRadius = m_radius * 0.025f;
+	float wingLength   = m_radius * 0.07f;
+	float wingHeight   = m_radius * 0.004f;
+	float finHeight    = m_radius * 0.04f;
+
+	// Center circle (hollow)
+	sf::CircleShape circle(circleRadius);
+	circle.setFillColor(sf::Color::Transparent);
+	circle.setOutlineColor(sf::Color::Green);
+	circle.setOutlineThickness(m_radius * 0.004f);
+	circle.setOrigin(circleRadius, circleRadius);
+	circle.setPosition(fpmX, fpmY);
+	window.draw(circle);
+
+	// Left wing: origin anchored to right edge so it grows left from the circle edge
+	sf::RectangleShape leftWing(sf::Vector2f{ wingLength, wingHeight });
+	leftWing.setFillColor(sf::Color::Green);
+	leftWing.setOrigin(wingLength, wingHeight / 2.f);
+	leftWing.setPosition(fpmX - circleRadius, fpmY);
+	window.draw(leftWing);
+
+	// Right wing: origin anchored to left edge so it grows right from the circle edge
+	sf::RectangleShape rightWing(sf::Vector2f{ wingLength, wingHeight });
+	rightWing.setFillColor(sf::Color::Green);
+	rightWing.setOrigin(0.f, wingHeight / 2.f);
+	rightWing.setPosition(fpmX + circleRadius, fpmY);
+	window.draw(rightWing);
+
+	// Tail fin: origin at bottom so it grows upward from top of circle
+	sf::RectangleShape fin(sf::Vector2f{ wingHeight, finHeight });
+	fin.setFillColor(sf::Color::Green);
+	fin.setOrigin(wingHeight / 2.f, finHeight);
+	fin.setPosition(fpmX, fpmY - circleRadius);
+	window.draw(fin);
 }

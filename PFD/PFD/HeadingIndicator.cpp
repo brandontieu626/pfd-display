@@ -1,4 +1,5 @@
 #include "HeadingIndicator.h"
+#include "Constants.h"
 #include <iostream>
 #include <cmath>
 
@@ -31,7 +32,7 @@ void HeadingIndicator::drawArc(sf::RenderWindow& window)
         for (int i = 0; i <= 180; i++)
         {
             // Step from 180 to 360 degrees to draw the upper semicircle (left -> top -> right)
-            float radians = (i + 180.f) * (3.14159f / 180.f);
+            float radians = (i + 180.f) * (PI / 180.f);
             arc[i].position = sf::Vector2f{
                 m_center.x + r * std::cos(radians),
                 m_center.y + r * std::sin(radians)
@@ -46,32 +47,49 @@ void HeadingIndicator::drawArc(sf::RenderWindow& window)
 void HeadingIndicator::drawTicks(sf::RenderWindow& window, const FlightData& plane)
 {
     constexpr float HEADING_RANGE = 80.f;
-    constexpr float ARC_RANGE = 180.f;
+    constexpr float ARC_RANGE     = 180.f;
     constexpr float TICK_INTERVAL = 5.f;
 
-    for (float headingOffset = - (HEADING_RANGE / 2.f); headingOffset <= HEADING_RANGE / 2.f; headingOffset += TICK_INTERVAL)
+    // Start at the first 5° heading below the left edge of the visible range
+    float startHeading = std::floor((plane.heading - HEADING_RANGE / 2.f) / TICK_INTERVAL) * TICK_INTERVAL;
+
+    // Iterate from first left heading to last right heading
+    for (float tickHeading = startHeading; tickHeading <= plane.heading + HEADING_RANGE / 2.f; tickHeading += TICK_INTERVAL)
     {
-        // Calculate heading for that tick
-        float heading = plane.heading + headingOffset;
+        // Fractional offset of this tick from current heading — drives arc position
+        float headingOffset = tickHeading - plane.heading;
 
+        // Wrap offset to +-180 so crossing the 0/360 boundary is handled correctly
+        if (headingOffset >  180.f) headingOffset -= 360.f;
+        if (headingOffset < -180.f) headingOffset += 360.f;
 
-        // Wrap heading between 0 and 360
-        if (heading < 0) heading += 360.f;
-        if (heading >= 360.f) heading -= 360.f;
+        if (headingOffset < -HEADING_RANGE / 2.f || headingOffset > HEADING_RANGE / 2.f) continue;
 
-        // Convert heading offset to arc position by scaling to fit the full arc range
+        // Normalize absolute tick heading to 0-360 for label/major check
+        // Use a while loop because it can be more than one full rotation out of range
+        float displayHeading = tickHeading;
+        while (displayHeading <    0.f) displayHeading += 360.f;
+        while (displayHeading >= 360.f) displayHeading -= 360.f;
+
+        // Round due to floating arithmetic errors and check if it's a major tick
+        int h = static_cast<int>(std::round(displayHeading));
+        bool isMajor = (h % 10 == 0);
+
+        // Arc position
+        // Stretch the 80 degree heading range in a semicircle
         float arcOffset = headingOffset * (ARC_RANGE / HEADING_RANGE);
-        // Add 270 to shift reference point to 12 o'clock position (top of arc)
-        float radians = (arcOffset + 270.f) * (3.14159f / 180.f);
+
+        // Convert to radians
+        float radians   = (arcOffset + 270.f) * (PI / 180.f);
+
+        // Calculate actual screen coordinates using radius
         float x = m_center.x + m_radius * std::cos(radians);
         float y = m_center.y + m_radius * std::sin(radians);
 
-        // Longer tick mark if increment of 10
-        bool isMajor = (static_cast<int>(heading) % 10 == 0);
-        float tickLength = isMajor ? m_radius * 0.08f : m_radius * 0.04f;
 
-        // Draw tick pointing inward
-        float tickWidth = m_radius * 0.004f;
+        float tickLength = isMajor ? m_radius * 0.08f : m_radius * 0.04f;
+        float tickWidth  = m_radius * 0.004f;
+
         sf::RectangleShape tick(sf::Vector2f{ tickWidth, tickLength });
         tick.setFillColor(sf::Color::White);
         tick.setOrigin(tickWidth / 2.f, 0.f);
@@ -81,33 +99,27 @@ void HeadingIndicator::drawTicks(sf::RenderWindow& window, const FlightData& pla
 
         if (isMajor)
         {
-            int h = static_cast<int>(heading);
             std::string labelStr;
             sf::Color directionColor = sf::Color::White;
             switch (h)
             {
             case 0:
-            case 360:   labelStr = "N"; 
-                directionColor = sf::Color::Red;
-                break;
-            case 90:    labelStr = "E"; break;
-            case 180:   labelStr = "S"; break;
-            case 270:   labelStr = "W"; break;
-            default:    labelStr = std::to_string(h); break;
+            case 360: labelStr = "N"; directionColor = sf::Color::Red; break;
+            case 90:  labelStr = "E"; break;
+            case 180: labelStr = "S"; break;
+            case 270: labelStr = "W"; break;
+            default:  labelStr = std::to_string(h); break;
             }
 
-            // Label with angle or direction
             sf::Text label;
             label.setFont(m_font);
             label.setCharacterSize(static_cast<unsigned int>(m_radius * 0.08f));
             label.setFillColor(directionColor);
             label.setString(labelStr);
 
-            // Find center of text box
             sf::FloatRect bounds = label.getLocalBounds();
             label.setOrigin(bounds.left + bounds.width / 2.f, bounds.top + bounds.height / 2.f);
 
-            // Position label inward from arc edge by pushing opposite to the outward direction
             float labelOffset = tickLength + m_radius * 0.08f;
             label.setPosition(
                 x - labelOffset * std::cos(radians),
