@@ -145,6 +145,7 @@ sfml-system.lib;%(AdditionalDependencies)</AdditionalDependencies>
     <ClCompile Include="AttitudeIndicator.cpp" />
     <ClCompile Include="HeadingIndicator.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="PlaneController.cpp" />
     <ClCompile Include="VerticalSpeedIndicator.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -154,6 +155,7 @@ sfml-system.lib;%(AdditionalDependencies)</AdditionalDependencies>
     <ClInclude Include="Constants.h" />
     <ClInclude Include="FlightData.h" />
     <ClInclude Include="HeadingIndicator.h" />
+    <ClInclude Include="PlaneController.h" />
     <ClInclude Include="VerticalSpeedIndicator.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
