@@ -12,6 +12,7 @@ private:
 	void drawTicks(sf::RenderWindow& window, const FlightData& plane, float pixelsPerKnot);
 	void drawReadout(sf::RenderWindow& window, const FlightData& plane);
 	void drawKts(sf::RenderWindow& window);
+	void drawColorBands(float pixelsPerKnot, const FlightData& plane);
 
 	sf::Vector2f m_center;              // Center of airspeed tape
 	float m_width;                      // Width of airspeed tape

@@ -152,6 +152,7 @@ sfml-system.lib;%(AdditionalDependencies)</AdditionalDependencies>
     <ClInclude Include="AirspeedTape.h" />
     <ClInclude Include="AltitudeTape.h" />
     <ClInclude Include="AttitudeIndicator.h" />
+    <ClInclude Include="Band.h" />
     <ClInclude Include="Constants.h" />
     <ClInclude Include="FlightData.h" />
     <ClInclude Include="HeadingIndicator.h" />

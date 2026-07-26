@@ -19,9 +19,14 @@ constexpr float HEADING_ACCEL    = 45.f; // deg/sec^2 — rate of yaw rate incre
 constexpr float HEADING_MAX_RATE = 30.f; // deg/sec   — peak turn rate
 constexpr float HEADING_DECAY    = 60.f; // deg/sec^2 — rate of yaw rate decrease when key released
 
+// AIRSPEED CONSTANTS
+constexpr float SPEED_STALL = 60.f;     // below = stall (red)
+constexpr float SPEED_CAUTION = 250.f;  // above = caution (yellow)
+constexpr float SPEED_MAX = 300.f;      // above = overspeed (red)
+
 // VSPEED CONSTANTS
 constexpr float VSPEED_PITCH_SCALE = 100.f; // ft/min per degree of pitch
-constexpr float VSPEED_RESPONSE    =   2.f; // how quickly vspeed tracks pitch target
+constexpr float VSPEED_RESPONSE    =  0.8f; // how quickly vspeed tracks pitch target
 
 PlaneController::PlaneController()
     : m_plane{ 0.f, 0.f, 0.f, 10.f, 5000.f, 0.f, 0.f }
