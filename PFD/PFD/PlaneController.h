@@ -10,7 +10,7 @@ public:
 
 private:
     FlightData m_plane;
-    float m_pitchRate;
+    float m_pitchRate; 
     float m_rollRate;
     float m_yawRate;
     float m_trackOffset;

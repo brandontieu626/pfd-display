@@ -1,11 +1,12 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include "FlightData.h"
-class AltitudeTape
+#include "Instrument.h"
+class AltitudeTape : public Instrument
 {
 public:
 	AltitudeTape(const sf::Vector2f& center, float width, float height);
-	void draw(sf::RenderWindow& window, const FlightData& plane);
+	void draw(sf::RenderWindow& window, const FlightData& plane) override;
 private:
 	void drawTape(sf::RenderWindow& window);
 	void drawTicks(const FlightData& plane, float pixelsPerFoot);

@@ -155,6 +155,7 @@ sfml-system.lib;%(AdditionalDependencies)</AdditionalDependencies>
     <ClInclude Include="Constants.h" />
     <ClInclude Include="FlightData.h" />
     <ClInclude Include="HeadingIndicator.h" />
+    <ClInclude Include="Instrument.h" />
     <ClInclude Include="PlaneController.h" />
     <ClInclude Include="VerticalSpeedIndicator.h" />
   </ItemGroup>

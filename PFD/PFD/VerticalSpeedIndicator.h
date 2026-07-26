@@ -1,12 +1,13 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include "FlightData.h"
+#include "Instrument.h"
 
-class VerticalSpeedIndicator
+class VerticalSpeedIndicator : public Instrument
 {
 public:
     VerticalSpeedIndicator(const sf::Vector2f& center, float width, float height);
-    void draw(sf::RenderWindow& window, const FlightData& plane);
+    void draw(sf::RenderWindow& window, const FlightData& plane) override;
 private:
     void drawTape(sf::RenderWindow& window);
     void drawPointer(sf::RenderWindow& window, const FlightData& plane);

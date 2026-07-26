@@ -1,11 +1,12 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include "FlightData.h"
-class AirspeedTape
+#include "Instrument.h"
+class AirspeedTape : public Instrument
 {
 public:
 	AirspeedTape(const sf::Vector2f& center,float width, float height);
-	void draw(sf::RenderWindow& window, const FlightData& plane);
+	void draw(sf::RenderWindow& window, const FlightData& plane) override;
 private:
 	void drawTape(sf::RenderWindow& window);
 	void drawTicks(sf::RenderWindow& window, const FlightData& plane, float pixelsPerKnot);

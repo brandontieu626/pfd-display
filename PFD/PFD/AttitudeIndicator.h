@@ -1,12 +1,13 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include "FlightData.h"
+#include "Instrument.h"
 
-class AttitudeIndicator
+class AttitudeIndicator : public Instrument
 {
 public:
 	AttitudeIndicator(const sf::Vector2f& center, float radius); 
-	void draw(sf::RenderWindow& window, const FlightData& plane);
+	void draw(sf::RenderWindow& window, const FlightData& plane) override;
 private:
 	void drawSkyGround(const FlightData& plane, float pitchOffset);
 	void drawHorizon(const FlightData& plane, float pitchOffset);
