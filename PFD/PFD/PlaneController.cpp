@@ -24,7 +24,7 @@ constexpr float VSPEED_PITCH_SCALE = 100.f; // ft/min per degree of pitch
 constexpr float VSPEED_RESPONSE    =   2.f; // how quickly vspeed tracks pitch target
 
 PlaneController::PlaneController()
-    : m_plane{ 0.f, 0.f, 0.f, 10.f, 0.f, 0.f, 0.f }
+    : m_plane{ 0.f, 0.f, 0.f, 10.f, 5000.f, 0.f, 0.f }
     , m_pitchRate(0.f)
     , m_rollRate(0.f)
     , m_yawRate(0.f)
@@ -89,12 +89,6 @@ void PlaneController::update(float dt)
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
         m_plane.airspeed = std::clamp(m_plane.airspeed - 0.5f, 0.f, 400.f);
 
-    // Altitude — R to increase, F to decrease
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::R))
-        m_plane.altitude = std::clamp(m_plane.altitude + 5.f, 0.f, 50000.f);
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::F))
-        m_plane.altitude = std::clamp(m_plane.altitude - 5.f, 0.f, 50000.f);
-
     // Crosswind drift — T to drift right, G to drift left
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::T))
         m_trackOffset = std::clamp(m_trackOffset + 0.5f, -30.f, 30.f);
@@ -107,6 +101,10 @@ void PlaneController::update(float dt)
 
     // Derive vspeed from pitch via first-order lag
     m_plane.vspeed += (m_plane.pitch * VSPEED_PITCH_SCALE - m_plane.vspeed) * VSPEED_RESPONSE * dt;
+
+    // Integrate altitude from vspeed (ft/min → ft/sec via /60)
+    m_plane.altitude += m_plane.vspeed * (dt / 60.f);
+    m_plane.altitude = std::clamp(m_plane.altitude, 0.f, 50000.f);
 
     // Integrate heading and derive track from heading + crosswind offset
     m_plane.heading += m_yawRate * dt;
