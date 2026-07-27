@@ -335,9 +335,11 @@ void AttitudeIndicator::drawFlightPathMarker(sf::RenderWindow& window, const Fli
 
 	// Convert vspeed (ft/min) and airspeed (knots) to the same unit (ft/sec) to get flight path angle
 	// vertical speed/total speed
-	// clamp to keep in valid asin range
+	// clamp to keep in valid arcsin range
 	float gamma = std::asin(
-		std::clamp((plane.vspeed / 60.f) / (plane.airspeed * 1.68781f), -1.f, 1.f)
+		// Formula for flight path angle = arcsin(verticalspeed/totalspeed)
+		std::clamp((plane.vspeed / 60.f) / (plane.airspeed * 1.68781f), -1.f, 1.f) 
+		
 	);
 
 	// Convert radians to degrees
@@ -348,7 +350,7 @@ void AttitudeIndicator::drawFlightPathMarker(sf::RenderWindow& window, const Fli
 	// Positive gamma = climbing = symbol moves up (negative y in SFML)
 	// clamp to stay inside the attitude indicator circle (border is 85%)
 	// calculate vertical offset position
-	float yOffset = std::clamp(-gammaDeg * pixelsPerPitch, -m_radius * 0.85f, m_radius * 0.85f);
+	float yOffset = -gammaDeg * pixelsPerPitch;
 
 	// Drift angle: how far ground track deviates from heading (wind effect).
 	// track > heading, FPM shifts right due to wind drift
@@ -358,8 +360,23 @@ void AttitudeIndicator::drawFlightPathMarker(sf::RenderWindow& window, const Fli
 	float trackError = plane.track - plane.heading;
 	if (trackError >  180.f) trackError -= 360.f;
 	if (trackError < -180.f) trackError += 360.f;
-	float xOffset = std::clamp(trackError * pixelsPerPitch, -m_radius * 0.85f, m_radius * 0.85f);
+	float xOffset = trackError * pixelsPerPitch;
 
+	// Circular clamp: keep FPM inside the AI circle regardless of combined x+y offset.
+	// Independent per-axis clamping would allow the FPM to escape at diagonal corners
+	// (max x + max y produces a distance of radius*sqrt(2) ≈ 1.2x the limit).
+	// Calculate if distance from center is greater than 85% of the radius (max distance)
+	float limit = m_radius * 0.85f;
+	float dist  = std::sqrt(xOffset * xOffset + yOffset * yOffset);
+	if (dist > limit)
+	{
+		// Scale down to keep within AI
+		float scale = limit / dist;
+		xOffset *= scale;
+		yOffset *= scale;
+	}
+
+	// Calculate fpm position from the center
 	float fpmX = m_center.x + xOffset;
 	float fpmY = m_center.y + yOffset;
 
