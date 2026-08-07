@@ -72,9 +72,4 @@ and drives PFD instruments using that data in real time
 
 
 
-https://github.com/user-attachments/assets/38eb07c7-7563-4bb7-b523-083fd7233c40
-
-
-
-
 
